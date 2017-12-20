@@ -4,9 +4,20 @@
 #
 # See documentation in:
 # http://doc.scrapy.org/en/latest/topics/spider-middleware.html
-
+import random
 from scrapy import signals
+from Academician.user_agents import agents
 
+
+class UserAgentMiddleware(object):
+    """ 换User-Agent """
+    def process_request(self, request, spider):
+        agent = random.choice(agents)
+        request.headers["User-Agent"] = agent
+
+
+    def process_response(self, request, response, spider):
+        return response
 
 class AcademicianSpiderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,

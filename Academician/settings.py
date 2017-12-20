@@ -14,6 +14,15 @@ BOT_NAME = 'Academician'
 SPIDER_MODULES = ['Academician.spiders']
 NEWSPIDER_MODULE = 'Academician.spiders'
 
+ITEM_PIPELINES = {
+   'Academician.pipelines.AcademicianPipeline': 300,
+}
+
+DOWNLOADER_MIDDLEWARES = {
+    "scrapy.downloadermiddlewares.useragent.UserAgentMiddleware": None,
+    'Academician.middlewares.UserAgentMiddleware': 401,
+}
+DOWNLOAD_DELAY = 2
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'Academician (+http://www.yourdomain.com)'
@@ -27,7 +36,7 @@ NEWSPIDER_MODULE = 'Academician.spiders'
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
@@ -52,9 +61,7 @@ NEWSPIDER_MODULE = 'Academician.spiders'
 
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    'Academician.middlewares.MyCustomDownloaderMiddleware': 543,
-#}
+
 
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
@@ -64,9 +71,7 @@ NEWSPIDER_MODULE = 'Academician.spiders'
 
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'Academician.pipelines.AcademicianPipeline': 300,
-#}
+
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
