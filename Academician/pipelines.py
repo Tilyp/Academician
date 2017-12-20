@@ -8,6 +8,7 @@ from pymongo import MongoClient
 from Academician.items import CasadItem, CkcestItem
 
 class AcademicianPipeline(object):
+
     def __init__(self):
         # client = MongoClient("10.4.255.129", 27017)
         client = MongoClient("192.168.20.102", 27017)
@@ -25,7 +26,7 @@ class AcademicianPipeline(object):
                 print e
         if isinstance(item, CkcestItem):
             try:
-                print dict(item)
-                # self.ckcest.insert(dict(item))
+                # print dict(item)
+                self.ckcest.insert(dict(item))
             except Exception, e:
                 print e

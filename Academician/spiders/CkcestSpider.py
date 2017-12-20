@@ -36,6 +36,7 @@ class CkcestSpider(CrawlSpider):
             data = self.data
             data["xbType"] = str(xb)
             yield FormRequest(url=self.post_url, formdata=data, callback=self.parse, meta={"data": data}, dont_filter=True)
+            # break
 
     def parse(self, response):
         soup = BeautifulSoup(response.body, "lxml")
@@ -43,7 +44,7 @@ class CkcestSpider(CrawlSpider):
         for link in links:
             req_url = self.host + link["href"]
             yield Request(url=req_url, callback=self.parse_home, dont_filter=True)
-            break
+            # break
         data = response.meta["data"]
         current_page = data["default_current_page_param_name"]
         data["default_current_page_param_namec"] = current_page
@@ -60,12 +61,19 @@ class CkcestSpider(CrawlSpider):
         jxym = soup.find("div", class_="jxym")
         imgUrl = self.host + jxym.find("img")["src"]
         identity = soup.find("div", class_="jxy_toptit yhei").get_text(strip=True).split(u" · ")[0]
-        jxym_text = jxym.find_all("h4")
-        keyword = ["Name", "Nation", "Sex", "Country", "Ancestral", "Birthday", "ElectedTime", "University", "Department"]
+        jxym_text = jxym.find_all("li")
+        keyword = {u"姓名":"Name", u"民族":"Nation", u"性别":"Sex", u"国籍":"Country", u"籍贯":"Ancestral",
+                   u"出生日期": "Birthday", u"去世日期":"DeathTime", u"所属党派":"Party",
+                   u"当选院士年份":"ElectedTime", u"毕业院校": "University", u"学部学科":"Department"}
         detail = {}
-        for i, text in enumerate(jxym_text):
-            detail[keyword[i]] = text.get_text(strip=True).replace("\r\n", "").replace("\t", "")
-        # print json.dumps(dict(detail), ensure_ascii=False)
+        for text in jxym_text:
+            key = text.find("h3").get_text(strip=True)
+            msg = text.find("h4").get_text(strip=True).replace("\r\n", "").replace("\t", "")
+            detail[keyword[key]] = msg
+        if not detail.has_key("DeathTime"):
+            detail["DeathTime"] = "Null"
+        if not detail.has_key("Party"):
+            detail["Party"] = "Null"
         file_path = "data/" + self.name + "/" + identity + "/"
         if not os.path.exists(file_path):
             os.makedirs(file_path)
@@ -78,6 +86,7 @@ class CkcestSpider(CrawlSpider):
         file_data = requests.get(imgUrl).content
         with open(imgPath, "wb") as fd:
             fd.write(file_data)
+        # print json.dumps(dict(detail), ensure_ascii=False)
         req_url = response.url + "&pagename=grxx_zyxl&flag=1"
         yield Request(url=req_url, callback=self.parse_edu, meta={"data": detail})
 
