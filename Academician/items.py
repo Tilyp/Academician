@@ -40,3 +40,7 @@ class CkcestItem(scrapy.Item):
     Nation = scrapy.Field()
     University = scrapy.Field()
     imgUrl = scrapy.Field()
+    DeathTime = scrapy.Field()
+    Party = scrapy.Field()
+    Social_duties = scrapy.Field()
+    plurality = scrapy.Field()

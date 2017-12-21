@@ -30,3 +30,4 @@ class AcademicianPipeline(object):
                 self.ckcest.insert(dict(item))
             except Exception, e:
                 print e
+
