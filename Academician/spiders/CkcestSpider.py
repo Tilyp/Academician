@@ -35,7 +35,7 @@ class CkcestSpider(CrawlSpider):
 
     def start_requests(self):
         # for xb in [7055] + range(3532, 3541)[1:2]:
-        for xb in range(3532, 3541)[1:2]:
+        for xb in range(3532, 3541)[7:8]:
             data = self.data
             data["xbType"] = str(xb)
             yield FormRequest(url=self.post_url, formdata=data, callback=self.parse, meta={"data": data}, dont_filter=True)
@@ -48,8 +48,8 @@ class CkcestSpider(CrawlSpider):
             base_url = self.host + link["href"]
             detail = {"url": base_url}
             req_url = base_url + "&pagename=grxx_jbxx&flag=0"
-            # yield Request(url=req_url, callback=self.parse_home, meta={"data": detail}, dont_filter=True)
-            break
+            yield Request(url=req_url, callback=self.parse_home, meta={"data": detail}, dont_filter=True)
+            # break
         data = response.meta["data"]
         current_page = data["default_current_page_param_name"]
         data["default_current_page_param_namec"] = current_page
@@ -58,7 +58,6 @@ class CkcestSpider(CrawlSpider):
         href = soup.find("div", class_="gy_right_feny").find_all("a")[-1]["href"]
         totalPage = re.findall("\d+", href)[0]
         if int(totalPage) > int(current_page.strip()):
-            print int(current_page.strip())
             yield FormRequest(url=self.post_url, formdata=data, callback=self.parse, meta={"data": data}, dont_filter=True)
 
     def parse_home(self, response):

@@ -11,6 +11,7 @@
     "PromiseTime": "承诺时限",
     "LegalTime": "法定时限",
     "HandleCondition": "办理条件",
+    "otherPLTime": "其他时限",
     "Rereq": [{
         "MaterialDemand": "材料要求",
         "Material": [{

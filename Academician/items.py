@@ -47,6 +47,7 @@ class CkcestItem(scrapy.Item):
 
 class WsspItem(scrapy.Item):
     LegalTime = scrapy.Field()
+    otherPLTime = scrapy.Field()
     Rereq = scrapy.Field()
     HandleAddress = scrapy.Field()
     item_name = scrapy.Field()

@@ -2,8 +2,6 @@
 import json
 import os
 import random
-import re
-
 from requests import ConnectionError
 from scrapy import Request, FormRequest
 from scrapy.spiders import CrawlSpider
@@ -12,20 +10,20 @@ import requests
 from Academician.items import WsspItem
 from Academician.user_agents import agents
 
-
 class WsspSpider(CrawlSpider):
     name = "WsspSpider"
     host = "http://wssp.hainan.gov.cn"
     base_url = "http://wssp.hainan.gov.cn/wssp/hn/module/wssp/wssb/sbindex.do"
 
     def start_requests(self):
+
         data = {"acc_id": "", "bmmc": "", "ddid": "HZ2881f4424539dd0142453d7336002c",
                 "deptId": "HZ2881f4424539dd0142453d7336002c", "sxlx": "", "sxname": "",
                 "HZ_PAGE_NO": "1", "HZ_PAGE_SIZE": "10", "pageNum": ""}
         yield FormRequest(url=self.base_url, formdata=data, meta={"data": data}, callback=self.parse)
 
         """
-                # req_url = "http://wssp.hainan.gov.cn/wssp/hn/module/wssp/wssb/getSXJS.do?id=569826732e864f00bceab27c16ca3ad0"
+        # req_url = "http://wssp.hainan.gov.cn/wssp/hn/module/wssp/wssb/getSXJS.do?id=22357cf211944df5b0a0dee77ecddd94"
         req_url = "http://wssp.hainan.gov.cn/wssp/hn/module/wssp/wssb/getSXJS.do?id=810c3c84f8084eab97a80ad12be00933&zh_id="
         # req_url = "http://wssp.hainan.gov.cn/wssp/hn/module/wssp/wssb/getSXJS.do?id=65b3162aed174f82b86538134f1db578"
         yield Request(url=req_url, callback=self.parse_hn, dont_filter=True)
@@ -49,14 +47,12 @@ class WsspSpider(CrawlSpider):
         soup = BeautifulSoup(response.body, "lxml")
         temp_main = soup.find("div", class_="public_temp_main_1 fn-clear")
         lawGuide_mainTit = temp_main.find("div", class_="lawGuide_mainTit fn-clear")
-        item_name = lawGuide_mainTit.find("em")["title"]
         item_num = lawGuide_mainTit.get_text(strip=True).split("\n")[-1].split(u":")[1].split(u"网上")[0]
         lawGuide_mainLeft = temp_main.find("div", class_="lawGuide_mainLeft")
         lawGuide_mainLeft_tit = lawGuide_mainLeft.find("div", class_="lawGuide_mainLeft_tit").get_text()
         base_msg = lawGuide_mainLeft.find("ul", class_="fn-clear").find_all("li")
         base_key = {u"办理地点": "HandleAddress", u"办理时间": "HandleTime", u"咨询电话": "AskTell", u"投诉电话":"complain"}
         detail = {}
-        detail["item_name"] = item_name
         detail["item_num"] = item_num
         detail["url"] = response.url
         detail["ServiceDepartment"] = lawGuide_mainLeft_tit
@@ -67,12 +63,16 @@ class WsspSpider(CrawlSpider):
                 value = "Null"
             detail[base_key[key]] = value
         lawGuide_main = soup.find("ul", class_="lawGuide_main").find_all("li")
-        main_key = ["BidSubject", "HandleResults", "PromiseTime", "LegalTime"]
-        for ind, law in enumerate(lawGuide_main[1:]):
+        main_key = ["item_name", "BidSubject", "HandleResults", "PromiseTime", "LegalTime"]
+        detail["otherPLTime"] = []
+        for ind, law in enumerate(lawGuide_main):
             val = law.get_text(strip=True).split(u"：")[1]
             if val == "":
                 val = "Null"
-            detail[main_key[ind]] = val
+            try:
+                detail[main_key[ind]] = val
+            except:
+                detail["otherPLTime"].append(law.get_text(strip=True))
         sqtj = soup.find("div", {"id": "sqtj"}).find("font").get_text(strip=True)
         if sqtj == "":
             sqtj = "Null"
@@ -85,6 +85,7 @@ class WsspSpider(CrawlSpider):
             MaterialReq["Material"] = []
             MaterialReq['MaterialDemand'] = "Null"
             detail["Rereq"].append(MaterialReq)
+        rereq = ["Serial", "MaterialName", "MaterialFlag"]
         for indtr, tr in enumerate(divchange[1:]):
             tds = tr.find_all("td")
             if len(tds) == 2:
@@ -95,8 +96,15 @@ class WsspSpider(CrawlSpider):
                     MaterialReq = {}
                 MaterialReq["Material"] = []
                 MaterialReq['MaterialDemand'] = MaterialDemand
+            elif indtr == 0 and len(tds) != 2:
+                MaterialReq = {}
+                MaterialReq["Material"] = []
+                MaterialReq['MaterialDemand'] = " "
+                Material = {}
+                for ind, val in enumerate(tds[1:]):
+                    Material[rereq[ind]] = val.get_text(strip=True)
+                MaterialReq["Material"].append(Material)
             else:
-                rereq = ["Serial", "MaterialName", "MaterialFlag"]
                 Material = {}
                 for ind, val in enumerate(tds[1:]):
                     Material[rereq[ind]] = val.get_text(strip=True)
@@ -104,14 +112,27 @@ class WsspSpider(CrawlSpider):
             if indtr + 1 == lentr:
                 # print json.dumps(MaterialReq, ensure_ascii=False)
                 detail["Rereq"].append(MaterialReq)
-        basis = soup.find_all("div", class_="basis yellow_tab")
+        basis = soup.find("div", class_="basis yellow_tab").find_all("tr")
         detail["HandleBasis"] = []
+        flag = 1
+        dsa = {}
         for i in basis:
-            dsa = {}
-            td = i.find_all("td")[1].find("a")
-            dsa["BasisName"] = td.get_text(strip=True)
-            dsa["BasisUrl"] = td["href"]
-            detail["HandleBasis"].append(dsa)
+            tds = i.find_all("td")
+            if flag / 2 == 0:
+                dsa = {}
+                dsa["BasisName"] = tds[1].get_text(strip=True)
+                try:
+                    basis = tds[1].find("a")
+                    dsa["BasisUrl"] = basis["href"]
+                except:
+                    dsa["BasisUrl"] = "Null"
+            elif flag / 2 == 1:
+                Description = tds[1].get_text(strip=True)
+                if Description == "":
+                    Description = "Null"
+                dsa["BasisDescription"] = Description
+                detail["HandleBasis"].append(dsa)
+            flag += 1
         column_tabs = soup.find("div", class_="column_tabs").find_all("li")
         if len(column_tabs) > 2:
             req_file = column_tabs[-1]["onclick"].split("'")[1]
@@ -123,6 +144,7 @@ class WsspSpider(CrawlSpider):
             for key, val in detail.items():
                 item[key] = val
             yield item
+            # print item
 
     def parse_file(self, response):
         detail = response.meta["data"]
@@ -156,7 +178,8 @@ class WsspSpider(CrawlSpider):
         item = WsspItem()
         for key, val in detail.items():
             item[key] = val
-        print item
+        yield item
+        # print item
 
 
 

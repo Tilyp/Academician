@@ -14,7 +14,7 @@ class AcademicianPipeline(object):
         client = MongoClient("192.168.20.102", 27017)
         Acad = client["Academician"]
         self.casad = Acad['Casad']
-        self.ckcest = Acad['Ckcest']
+        self.ckcest = Acad['CkcestArr']
         self.wssp = Acad['WsspItem']
 
 
