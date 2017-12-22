@@ -14,7 +14,7 @@ class UserAgentMiddleware(object):
     def process_request(self, request, spider):
         agent = random.choice(agents)
         request.headers["User-Agent"] = agent
-        
+
 
 
     def process_response(self, request, response, spider):
@@ -66,3 +66,5 @@ class AcademicianSpiderMiddleware(object):
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)
+
+

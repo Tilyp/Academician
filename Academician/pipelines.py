@@ -5,7 +5,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
 from pymongo import MongoClient
-from Academician.items import CasadItem, CkcestItem
+from Academician.items import CasadItem, CkcestItem, WsspItem
 
 class AcademicianPipeline(object):
 
@@ -15,9 +15,16 @@ class AcademicianPipeline(object):
         Acad = client["Academician"]
         self.casad = Acad['Casad']
         self.ckcest = Acad['Ckcest']
+        self.wssp = Acad['WsspItem']
 
 
     def process_item(self, item, spider):
+        if isinstance(item, WsspItem):
+            try:
+                # print dict(item)
+                self.wssp.insert(dict(item))
+            except Exception, e:
+                print e
         if isinstance(item, CasadItem):
             try:
                 # print dict(item)

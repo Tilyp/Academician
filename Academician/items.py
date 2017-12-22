@@ -22,7 +22,6 @@ class CasadItem(scrapy.Item):
     identity = scrapy.Field()
 
 
-
 class CkcestItem(scrapy.Item):
     Education = scrapy.Field()
     Experience = scrapy.Field()
@@ -44,3 +43,26 @@ class CkcestItem(scrapy.Item):
     Party = scrapy.Field()
     Social_duties = scrapy.Field()
     plurality = scrapy.Field()
+
+
+class WsspItem(scrapy.Item):
+    LegalTime = scrapy.Field()
+    Rereq = scrapy.Field()
+    HandleAddress = scrapy.Field()
+    item_name = scrapy.Field()
+    BidSubject = scrapy.Field()
+    HandleBasis = scrapy.Field()
+    complain = scrapy.Field()
+    HandleResults = scrapy.Field()
+    HandleCondition = scrapy.Field()
+    item_num = scrapy.Field()
+    PromiseTime = scrapy.Field()
+    AskTell = scrapy.Field()
+    ServiceDepartment = scrapy.Field()
+    HandleTime = scrapy.Field()
+    fileUrl = scrapy.Field()
+    fileName = scrapy.Field()
+    fileAuth = scrapy.Field()
+    filePath = scrapy.Field()
+    url = scrapy.Field()
+    fileMsg = scrapy.Field()

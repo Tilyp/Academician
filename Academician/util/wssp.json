@@ -1,0 +1,32 @@
+{
+    "item_name": "事项名称",
+    "item_num": "事项编码",
+    "ServiceDepartment": "服务部门",
+    "handleAddress": "办理地点",
+    "handleTime": "办理时间",
+    "AskTell": "咨询电话",
+    "complain": "投诉电话",
+    "BidSubject": "申办主体",
+    "HandleResults": "办理结果",
+    "PromiseTime": "承诺时限",
+    "LegalTime": "法定时限",
+    "HandleCondition": "办理条件",
+    "Rereq": [{
+        "MaterialDemand": "材料要求",
+        "Material": [{
+            "Serial": "材料序号",
+            "MaterialName": "材料名称",
+            "MaterialFlag": "材料操作"
+        }]
+    }],
+    "HandleBasis": [{
+        "BasisName": "依据名称",
+        "BasisUrl": "依据url"
+    }],
+    "fileMsg": [{
+        "fileUrl": "文件url",
+        "filePath": "文件存储路径",
+        "fileName": "文件名称",
+        "fileAuth": "文件制作机构"
+    }]
+   }
