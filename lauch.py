@@ -8,8 +8,9 @@ from scrapy import cmdline
 # cmdline.execute("scrapy crawl CkcestSpider --logfile log/CkcestSpider.log".split())
 # cmdline.execute("scrapy crawl CkcestSpider".split())
 
-cmdline.execute("scrapy crawl ExpertCkcest".split())
+# cmdline.execute("scrapy crawl ExpertCkcest".split())
 # cmdline.execute("scrapy crawl ExpertCkcest --logfile log/ExpertCkcest.log".split())
 
+cmdline.execute("scrapy crawl WsspSpider".split())
 
 
