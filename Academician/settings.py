@@ -21,6 +21,7 @@ ITEM_PIPELINES = {
 DOWNLOADER_MIDDLEWARES = {
     "scrapy.downloadermiddlewares.useragent.UserAgentMiddleware": None,
     'Academician.middlewares.UserAgentMiddleware': 401,
+    'Academician.middlewares.PhantomJSMiddleware': 100,
 }
 DOWNLOAD_DELAY = 2
 

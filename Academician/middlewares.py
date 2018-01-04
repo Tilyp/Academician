@@ -6,8 +6,11 @@
 # http://doc.scrapy.org/en/latest/topics/spider-middleware.html
 import random
 from scrapy import signals
+from scrapy.http import HtmlResponse
+from selenium import webdriver
+from time import sleep
 from Academician.user_agents import agents
-
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 class UserAgentMiddleware(object):
     """ 换User-Agent """
@@ -19,6 +22,21 @@ class UserAgentMiddleware(object):
 
     def process_response(self, request, response, spider):
         return response
+
+class PhantomJSMiddleware(object):
+    @classmethod
+    def process_request(cls, request, spider):
+
+        if request.meta.has_key('PhantomJS'):
+            dcap = dict(DesiredCapabilities.PHANTOMJS)
+            dcap["phantomjs.page.settings.userAgent"] = (random.choice(agents))
+            driver = webdriver.PhantomJS(desired_capabilities=dcap)
+            driver.get(request.url)
+            sleep(5)
+            content = driver.page_source.encode('utf-8')
+            driver.quit()
+            return HtmlResponse(request.url, encoding='utf-8', body=content, request=request)
+
 
 class AcademicianSpiderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,

@@ -21,10 +21,11 @@ class CasadSpider(CrawlSpider):
     def parse(self, response):
         soup = BeautifulSoup(response.body, "lxml")
         spans = soup.find("dl", {"id": "allNameBar"}).find_all("span")
-        for span in spans[1:]:
+        for span in spans:
             url = span.find("a")["href"]
             yield Request(url=url, callback=self.parse_detail, dont_filter=True)
             # break
+
     def parse_detail(self, response):
         soup = BeautifulSoup(response.body, "lxml")
         div = soup.find("div", class_="contentTest")

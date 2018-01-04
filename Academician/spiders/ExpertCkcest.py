@@ -1,26 +1,28 @@
 #! -*- coding: utf-8 -*-
 import json
 import os
+import random
 import re
 from scrapy import Request, FormRequest
 from scrapy.spiders import CrawlSpider
 from bs4 import BeautifulSoup
 import requests
-from Academician.items import CkcestItem
+from Academician.items import ExpertItem
+from Academician.user_agents import agents
 
 
 class ExpertCkcest(CrawlSpider):
     name = "ExpertCkcest"
-    host = "http://ysg.ckcest.cn"
-    keyword = ["旅游业", "高效农业", "互联网产业", "医疗健康产业", "金融服务业",
-               "会展业", "现代物流业", "油气产业", "医药产业", "低碳制造业",
-               "房地产业", "高新技术教育文化体育产业"]
+    host = "http://expert.ckcest.cn"
+    keyword = [u"旅游", u"农业", u"互联网", u"医疗", u"金融",
+               u"会展", u"现代物流", u"油气", u"医药", u"低碳",u"制造",
+               u"房地产", u"高新技术",u"教育", u"文化", u"体育"]
 
-    post_url = "http://expert.ckcest.cn/api/queryClaimExperts"
+    post_url = "http://expert.ckcest.cn/api/queryExperts"
 
     def start_requests(self):
-        data = {"name": "", "institute": "", "subject": "", "keyword": "房地产业", "from": "0", "size": "16"}
-        for key in self.keyword[1:2]:
+        for key in self.keyword:
+            data = {"name": "", "institute": "", "subject": "", "keyword": "房地产业", "from": "0", "size": "16"}
             data["keyword"] = key
             yield FormRequest(url=self.post_url, formdata=data, meta={"data": data},
                               callback=self.parse, dont_filter=True)
@@ -29,67 +31,66 @@ class ExpertCkcest(CrawlSpider):
         soup = json.loads(response.body)
         data = response.meta["data"]
         for obj in soup["obj"]:
-            print len(obj.keys())
-            obj = {"altName":"王一江;wang yi jiang;wang,yj;yijiang wang;yijiang,wang;wang,yijiang;yj,wang;",
-                "altOrganization":"tsinghua university;tsinghua univ;清华大学;",
-                "avatarUrl":"null",
-                "ccd":"null",
-                "city":"北京市",
-                "clc":"null",
-                "degree":"null",
-                "department":"null",
-                "displayNo":"null",
-                "domain":"null",
-                "gender":"null",
-                "introduction":"null",
-                "isCore":"null",
-                "isExact":"false",
-                "isFirst":"null",
-                "isMerged":"true",
-                "isShown":"true",
-                "isValid":"true",
-                "kId":"BEAC906A-D667-B898-DD0C-1C2D9E282CCB",
-                "keyword":"腐败程度;微观分析;权力寻租;房地产业;投资决定机制;实际控制人;利率;内螺纹;应力集中;疲劳强度;安全系数;螺纹根部;最大应力",
-                "name":"王一江",
-                "nativePlace":"null",
-                "operateTime":"1494363029330",
-                "organization":"清华大学",
-                "pinyin":"wang yi jiang",
-                "position":"null",
-                "positionalTitle":"null",
-                "profession":"null",
-                "province":"北京",
-                "researchDirection":"null",
-                "resume":"null",
-                "subject":"政治学;国民经济学;金融学;机械工程;力学",
-                "technicalName":"null", "thirdIdentifier": "null", "thirdNo": "null", "weight": "null"}
-            detail = {"nameOrgArray": str([obj])}
-            print detail
-            base_url = "http://expert.ckcest.cn/api/queryExpertSummary"
-            yield FormRequest(url=base_url, formdata=detail, meta={"data": detail},
-                              callback=self.parse_summary, dont_filter=True)
-            break
-            kId = obj["kId"]
-            name = obj["name"]
-            subject = obj["subject"]
-            keyword = obj["keyword"].strip()
-            organization = obj["organization"]
+            # detail = {"nameOrgArray": str([obj])}
+            # print detail
+            # base_url = "http://expert.ckcest.cn/api/queryExpertSummary"
+            # yield FormRequest(url=base_url, formdata=detail, meta={"data": detail},
+            #                   callback=self.parse_summary, dont_filter=True)
+            # break
+            detail = {}
+            detail['kId'] = obj["kId"]
+            detail['name'] = obj["name"]
+            detail['subject'] = obj["subject"]
+            detail["level"] = data["keyword"]
+            detail['keyword'] = obj["keyword"].strip()
+            detail['organization'] = obj["organization"]
+            req_url = "http://expert.ckcest.cn/detail?kid=%s" % detail['kId']
+            yield Request(url=req_url, callback=self.parse_summary, meta={"data": detail, "PhantomJS": True})
+            # break
         count = soup["count"]
-        if int(data["from"]) < count:
+        if int(data["from"]) <= int(count):
             data["from"] = str(int(data["from"]) + 16)
-            # yield FormRequest(url=self.post_url, formdata=data, meta={"data": data},
-            #                   callback=self.parse, dont_filter=True)
+            yield FormRequest(url=self.post_url, formdata=data, meta={"data": data},
+                              callback=self.parse, dont_filter=True)
 
 
 
     def parse_summary(self, response):
-        """'根据数据搜索表明' + $scope.curExpert.name + '（专家）可见的最早中文论文发表是'
-                            + chineseDetailData.year + '年在' + chineseDetailData.journal + '（期刊）上的'
-                            + chineseDetailData.title + '一文，最早英文论文发表是' + englishDetailData.year + '年在'
-                            + englishDetailData.journal + '（期刊）上的' + englishDetailData.title + '一文。'
-                            + '截至' + $scope.summaryData.year + '年在' + sourceStr + '等' + categoryCount
-                            + '种期刊上共发文' + totalCount + '篇，其研究领域主要集中在' + areaStr + '等方向。'"""
-        soup = json.loads(response.body)
-        print json.dumps(soup, ensure_ascii=False)
+        data = response.meta["data"]
+        soup = BeautifulSoup(response.body, "lxml")
+        content = soup.find("div", class_="content ng-binding").get_text(strip=True)
+        data['content'] = content
+        try:
+            img = soup.find("img", class_="avatar-img")["src"].split("..")[1]
+        except:
+            img = soup.find("img", class_="avatar-img")["src"]
+        imgUrl = self.host + img
+        file_path = "data/" + self.name + "/" + data["level"] + "/"
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+        imgPath = file_path + data['name'] + ".png"
+        data["imgUrl"] = imgUrl
+        data["imgPath"] = imgPath
+        data["imgName"] = data['name'] + ".png"
+        sess = requests.Session()
+        headers = {}
+        headers["User-Agent"] = random.choice(agents)
+        try:
+            try:
+                file_data = sess.get(imgUrl, timeout=10, headers=headers).content
+            except:
+                file_data = sess.get(imgUrl, timeout=10, headers=headers).content
+            with open(imgPath, "wb") as fd:
+                fd.write(file_data)
+        except:
+            pass
+        item = ExpertItem()
+        for key, val in data.items():
+            # print key
+            item[key] = val
+        yield item
+
+
+
 
 

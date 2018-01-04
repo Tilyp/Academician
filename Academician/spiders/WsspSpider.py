@@ -16,15 +16,16 @@ class WsspSpider(CrawlSpider):
     base_url = "http://wssp.hainan.gov.cn/wssp/hn/module/wssp/wssb/sbindex.do"
 
     def start_requests(self):
-
-        data = {"acc_id": "", "bmmc": "", "ddid": "HZ2881f4424539dd0142453d7336002c",
+        # """
+        data = {"acc_id": "", "bmmc": "HZ28810342933aa9014298d218710b6a", "ddid": "HZ2881f4424539dd0142453d7336002c",
                 "deptId": "HZ2881f4424539dd0142453d7336002c", "sxlx": "", "sxname": "",
                 "HZ_PAGE_NO": "1", "HZ_PAGE_SIZE": "10", "pageNum": ""}
         yield FormRequest(url=self.base_url, formdata=data, meta={"data": data}, callback=self.parse)
 
         """
         # req_url = "http://wssp.hainan.gov.cn/wssp/hn/module/wssp/wssb/getSXJS.do?id=22357cf211944df5b0a0dee77ecddd94"
-        req_url = "http://wssp.hainan.gov.cn/wssp/hn/module/wssp/wssb/getSXJS.do?id=810c3c84f8084eab97a80ad12be00933&zh_id="
+        # req_url = "http://wssp.hainan.gov.cn/wssp/hn/module/wssp/wssb/getSXJS.do?id=810c3c84f8084eab97a80ad12be00933&zh_id="
+        req_url = "http://wssp.hainan.gov.cn/wssp/hn/module/wssp/wssb/getSXJS.do?id=65b3162aed174f82b86538134f1db578"
         # req_url = "http://wssp.hainan.gov.cn/wssp/hn/module/wssp/wssb/getSXJS.do?id=65b3162aed174f82b86538134f1db578"
         yield Request(url=req_url, callback=self.parse_hn, dont_filter=True)
         """
@@ -36,7 +37,7 @@ class WsspSpider(CrawlSpider):
             link = but.find("a")["href"]
             req_url = self.host + link
             yield Request(url=req_url, callback=self.parse_hn, dont_filter=True)
-            break
+            # break
         page_wrap = soup.find("div", class_="page_wrap").find("div", class_="fn-right").find("strong").get_text(strip=True)
         data = response.meta["data"]
         if int(page_wrap) > int(data["HZ_PAGE_NO"]):
@@ -112,27 +113,31 @@ class WsspSpider(CrawlSpider):
             if indtr + 1 == lentr:
                 # print json.dumps(MaterialReq, ensure_ascii=False)
                 detail["Rereq"].append(MaterialReq)
-        basis = soup.find("div", class_="basis yellow_tab").find_all("tr")
         detail["HandleBasis"] = []
-        flag = 1
-        dsa = {}
-        for i in basis:
-            tds = i.find_all("td")
-            if flag / 2 == 0:
-                dsa = {}
-                dsa["BasisName"] = tds[1].get_text(strip=True)
-                try:
-                    basis = tds[1].find("a")
-                    dsa["BasisUrl"] = basis["href"]
-                except:
-                    dsa["BasisUrl"] = "Null"
-            elif flag / 2 == 1:
-                Description = tds[1].get_text(strip=True)
-                if Description == "":
-                    Description = "Null"
-                dsa["BasisDescription"] = Description
-                detail["HandleBasis"].append(dsa)
-            flag += 1
+        try:
+            basis = soup.find("div", class_="basis yellow_tab").find_all("tr")
+            detail["HandleBasis"] = []
+            flag = 1
+            dsa = {}
+            for i in basis:
+                tds = i.find_all("td")
+                if flag / 2 == 0:
+                    dsa = {}
+                    dsa["BasisName"] = tds[1].get_text(strip=True)
+                    try:
+                        basis = tds[1].find("a")
+                        dsa["BasisUrl"] = basis["href"]
+                    except:
+                        dsa["BasisUrl"] = "Null"
+                elif flag / 2 == 1:
+                    Description = tds[1].get_text(strip=True)
+                    if Description == "":
+                        Description = "Null"
+                    dsa["BasisDescription"] = Description
+                    detail["HandleBasis"].append(dsa)
+                flag += 1
+        except:
+            pass
         column_tabs = soup.find("div", class_="column_tabs").find_all("li")
         if len(column_tabs) > 2:
             req_file = column_tabs[-1]["onclick"].split("'")[1]
@@ -159,17 +164,20 @@ class WsspSpider(CrawlSpider):
             fileId = tds[3].find("a")["href"].split("'")[-2]
             file_base_url = "http://wssp.hainan.gov.cn/wssp/downloadFileWssp.do?id=%s"
             fileUrl = file_base_url % fileId
-            sess = requests.Session()
-            try:
-                file_data = sess.get(fileUrl, timeout=10).content
-            except ConnectionError:
-                file_data = sess.get(fileUrl, timeout=10).content
             file_path = "data/" + self.name + "/" + detail["item_num"] + "/"
             if not os.path.exists(file_path):
                 os.makedirs(file_path)
             filePath = file_path + fileName
-            with open(filePath, "wb") as fd:
-                fd.write(file_data)
+            sess = requests.Session()
+            try:
+                try:
+                    file_data = sess.get(fileUrl, timeout=10).content
+                except:
+                    file_data = sess.get(fileUrl, timeout=10).content
+                with open(filePath, "wb") as fd:
+                    fd.write(file_data)
+            except:
+                pass
             file_msg["fileUrl"] = fileUrl
             file_msg["filePath"] = filePath
             file_msg["fileName"] = fileName

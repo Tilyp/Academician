@@ -35,7 +35,7 @@ class CkcestSpider(CrawlSpider):
 
     def start_requests(self):
         # for xb in [7055] + range(3532, 3541)[1:2]:
-        for xb in range(3532, 3541)[7:8]:
+        for xb in[7055]:
             data = self.data
             data["xbType"] = str(xb)
             yield FormRequest(url=self.post_url, formdata=data, callback=self.parse, meta={"data": data}, dont_filter=True)
